@@ -1,6 +1,6 @@
 #%%
 """
-Analyzing the isotherms and drawing insights. 
+Contains methods for analyzing the isotherms and drawing insights. 
 """
 
 import scipy.interpolate as sci
@@ -10,11 +10,21 @@ from functools import reduce
 from . import plt, np, pd, scipy
 
 class IsothermAnalysis():
+    """
+    Analyze isotherms and draw insights from them. 
+
+    Methods:
+    --------
+    convert_to_molecules_per_framework: Isotherm in different units convert to molecules 
+        per framework. Currently, only "kg/kg" is supported. 
+    convert_from_molecules_per_framework: Isotherm in molecules per framework 
+        different units convert to other units. Currently, only "kg/kg" is supported.
+    get_step_pressure: Get pressure at isotherm step (at loading at a 
+        fraction of geometric loading).
+    """
     def __init__(self):
         """
-        Analyze isotherms and draw insights from them. 
         """
-
         self.WATER_MASS = 18 #g/mol
 
     def convert_to_molecules_per_framework(self, frame_mass, input_unit="kg/kg"):
@@ -55,10 +65,13 @@ class IsothermAnalysis():
 
         Parameters
         ------------
-        step_loading: loading corresponding to the step. 
+        pressure: Isotherm pressure values.
+        loading: Isotherm loading values.
+        step_loading: Loading corresponding to the step as a fraction of geometric loading. 
 
         Returns
         ------------
+        step_pressure: Pressure at step of the isotherm.
         """
         interp_y = sci.interp1d(loading, pressure) 
         try:
@@ -71,24 +84,6 @@ class IsothermAnalysis():
                 step_pressure = step_p
         except:
             step_pressure=10000
-        """
-        try:      
-            if np.isnan(interp_y(step_loading)):
-                step_pressure = 10000
-            else:
-                step_pressure = interp_y(step_loading)
-        except:
-            step_pressure = 10000
-        """
-        """
-        try:
-            step_pressure = interp_y(step_loading)
-            print ("Tried")
-        except ValueError:
-            step_pressure = 10000
-            print ("Reached escape")
-            pass
-        """
         return step_pressure
 
 

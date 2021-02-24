@@ -1,4 +1,22 @@
-"""Importing the module files and related libraries. 
+"""
+flat_histogram_analysis 
+========================
+
+Analyzes the data from the flat histogram Monte Carlo simulations 
+for adsorption using the NVT+W method. Largely used to develop the calculations
+used in the JPCC paper (DOI: 10.1021/acs.jpcc.0c11082). 
+
+Basically, the data from the simulations--the C data--is used to get
+the relative weights of each loading macrostate and then used to 
+generate adsorption isotherms which are then analyzed. 
+
+Modules:
+--------
+NVTW_data_analysis: Contains methods for interpolating the C data, 
+    creating relative weights, and reweighting to generate isotherm. 
+isotherm_analysis: Analyzes the generated adsorption isotherms and 
+    calculates their interesting properties such as adsorption 
+    isotherm step. 
 """
 #%%
 import os

@@ -1,5 +1,6 @@
 """
-Analyze the C data obtaine from NVT+W simulations. 
+Contains methods for interpolating the C data, 
+creating relative weights, and reweighting to generate isotherm. 
 """
 import scipy.interpolate as sci
 import scipy.optimize as sco
@@ -9,23 +10,49 @@ from functools import reduce
 from . import plt, np, pd, scipy
 
 class NVTW_analysis():
+    """
+    Performs the analysis on the data from the NVT+W method results. 
+
+    Methods
+    -------
+    interpolate_C_data: Interpolates the C data to create values at every N.
+    calculate_P_values: Computes the P values, along with the 
+        $\Pi$ (weight) values.
+    reweight_iso: Performs histogram reweighting to get the weight distribution at 
+        any T, P. 
+    get_isotherm_data: Uses the weight distribution to get the weighted N value at 
+        a given set of T, P conditions to generate an isotherm. 
+    plot_C_values: Makes a plot of the C values.
+    plot_P_values: Makes a plot of the P values.
+    plot_energy_values: Makes a plot of the energy moments collected from the simulation. 
+    plot_isotherm_figure: Plots the isotherm figure. 
+    """
     def __init__(self):
         """
-        Performs the analysis on the data from the NVT+W method results. 
-
-        Can be used to create figures of weights and isotherms. 
         """
 
     def interpolate_C_data(self, df, name, T_ref, P_ref, interp_method="regression", filename_root="rd2",
                            save_C_tables=False, filepath_og="tmp_C_table_original.xlsx", filepath_C="tmp_C_table_interpolated.xlsx"):
         """
-        Interpolate C data available. 
+        Interpolate C data. 
         
         Parameters
         ------------
-        
+        df: Data frame containing the C data in the columns C_N-N-1, C_N-N and C_N-N+1. 
+        name: Name of the structure for which the analysis is being done. 
+        T_ref: Temperature at which the simulation was done. 
+        P_ref: Pressure (fugacity) at which the simulation was done. 
+        interp_method: Interpolation method for the C data. Either cubic "spline" or
+            polynomial "regression" (default: "regression").
+        filename_root = This is to identify the files resulting from the analysis (default: rd2).
+        save_C_tables: Whether to save the output interpolated C data (default: False)
+        filepath_og: File path to which the original C data are stored (default: tmp_C_table_original.xlsx)  
+        filepath_C: File path to which the interpolated C data are stored (default: tmp_C_table_interpolated.xlsx)
+
         Returns
-        ------------
+        -------
+        df: The original data frame. 
+        df_C: The dataframe containing the interpolated data at each N. 
         """
         
         if df[np.isnan(df['C_N-N-1'])].shape[0] > 0:
@@ -187,16 +214,25 @@ class NVTW_analysis():
         return [df, df_C]
     
     def calculate_P_values(self, df, df_C, save_C_tables=True, 
-                           filepath_og="tmp_C_table_original_P-data.xlsx", filepath_C="tmp_C_table_interpolated_P-data.xlsx" ):
+                           filepath_og="tmp_C_table_original_P-data.xlsx", 
+                           filepath_C="tmp_C_table_interpolated_P-data.xlsx"):
         """
-        Calculate P values and ratio from C data.
+        Calculate P values, ratio and weights (\Pi values)from C data.
         
         Parameters
         ----------
-        
+        df: Data frame containing the C data in the columns C_N-N-1, C_N-N and C_N-N+1. 
+        df_C: The dataframe containing the interpolated data at each N. 
+        save_C_tables: Whether to save the output interpolated C data (default: False)
+        filepath_og: File path to which the original C data with the new features calculated
+            are stored (default: tmp_C_table_original.xlsx)  
+        filepath_C: File path to which the interpolated C data with the new features 
+            are stored (default: tmp_C_table_interpolated.xlsx)
         
         Returns
-        ----------
+        -------
+        df: The original data frame with the new features such as weights. 
+        df_C: The dataframe containing the interpolated data with the new features at each N. 
         """
         
         #In this cell, we will manipulate the C values to get the weights at the reference pressure. 
@@ -240,13 +276,30 @@ class NVTW_analysis():
                     close_fig=False):
         """
         Plot C-related data using C values.
-        
+
+        Can be used in many ways using different combinations of parameters. This is 
+        to initialize, plot or finish up by adjusting the axes and saving the figure. 
+        All parameters are optional. 
+
         Parameters
         ----------
-        
+        df: The original dataframe to be plotted. 
+        df_C: The interpolated dataframe to be plotted. 
+        fig: Figure object, if present. 
+        figure_title: Title of the figure. 
+        figure_description: Description of the figures. 
+        plot_data: Whether or not to plot the data.
+        plot_color: Color of the data plotted. 
+        plot_label: Label of the things plotted. 
+        final_adjustment: After all the data has been plotted, the axes are readjusted 
+            to include everuthing. 
+        save_image: Whether or not to save figure to file. 
+        image_filepath: File path to which figure is saved. 
+        close_fig: Whether or not to close figure object. Only do this when plotting is finished. 
         
         Returns
-        ----------
+        -------
+        fig: Figure object.
         """
         
         if fig is None:
@@ -317,13 +370,31 @@ class NVTW_analysis():
                     image_filepath="tmp_iso_image.png",
                     close_fig=False):
         """
-        Plot P data and ratio values using C values.
-        
+        Plot P data and ratio values.
+
+        Can be used in many ways using different combinations of parameters. This is 
+        to initialize, plot or finish up by adjusting the axes and saving the figure. 
+        All parameters are optional. 
+
         Parameters
         ----------
+        df: The original dataframe to be plotted. 
+        df_C: The interpolated dataframe to be plotted. 
+        fig: Figure object, if present. 
+        figure_title: Title of the figure. 
+        figure_description: Description of the figures. 
+        plot_data: Whether or not to plot the data.
+        plot_color: Color of the data plotted. 
+        plot_label: Label of the things plotted. 
+        final_adjustment: After all the data has been plotted, the axes are readjusted 
+            to include everuthing. 
+        save_image: Whether or not to save figure to file. 
+        image_filepath: File path to which figure is saved. 
+        close_fig: Whether or not to close figure object. Only do this when plotting is finished. 
         
         Returns
-        ----------
+        -------
+        fig: Figure object.
         """
         
         if fig is None:
@@ -398,13 +469,30 @@ class NVTW_analysis():
                         close_fig=False):
         """
         Plot energy and its moments using from the values.
-        
+
+        Can be used in many ways using different combinations of parameters. This is 
+        to initialize, plot or finish up by adjusting the axes and saving the figure. 
+        All parameters are optional. 
+
         Parameters
         ----------
-        
+        df: The original dataframe to be plotted. 
+        df_C: The interpolated dataframe to be plotted. 
+        fig: Figure object, if present. 
+        figure_title: Title of the figure. 
+        figure_description: Description of the figures. 
+        plot_data: Whether or not to plot the data.
+        plot_color: Color of the data plotted. 
+        plot_label: Label of the things plotted. 
+        final_adjustment: After all the data has been plotted, the axes are readjusted 
+            to include everuthing. 
+        save_image: Whether or not to save figure to file. 
+        image_filepath: File path to which figure is saved. 
+        close_fig: Whether or not to close figure object. Only do this when plotting is finished. 
         
         Returns
-        ----------
+        -------
+        fig: Figure object.
         """
 
         if fig is None:
@@ -465,12 +553,27 @@ class NVTW_analysis():
         else:
             return fig
 
-    def reweight_iso(self, df,p, N_col='N', log_pi_N_muref_col='log_Pi_N', p_ref=4.11e9, T=298, drop_cols="Yes", T_ref = 298):
+    def reweight_iso(self, df, p, N_col='N', log_pi_N_muref_col='log_Pi_N', 
+                    p_ref=4.11e9, T=298, drop_cols="Yes", T_ref = 298):
         """
         Reweight the log of the weights of the isotherms according to the formula. 
         
-        In old versions, which can be found in C_cubic splines.py, the temperature extrapolation functionality
-        was not included. To use that for benchmarking, please see C_cubic_splines.py. 
+        Parameters:
+        -----------
+        df: The dataframe that should have \Pi values at the reference temperature and pressure.
+        p: The pressures at which reweighting is to be performed. 
+        T: Temperature list at which to reweight (default: 298)
+        p_ref: Reference pressure (fugacity) at which simulation was done (default: 4.11e9 Pa)
+        T_ref: Reference temperature at which simulation is carried out (default: 298).
+        N_col: The column to be used for the N values (default: N).
+        log_pi_N_muref_col: The column to be used for the log Pi at the reference 
+            pressure (default'log_Pi_N'). 
+        drop_cols: Whether or not to drop certain extra columns which may not be necessary 
+            for calculations (default: "Yes")
+        
+        Returns
+        -------
+        df: Returns dataframe with the reweighted data at the required T and P conditions. 
         """
         #print ("Calculating for different T")
         #R = 8.314 #J/molK
@@ -508,9 +611,28 @@ class NVTW_analysis():
         
         Parameters
         --------------
+        df_C: The dataframe that should have \Pi values at the reference temperature and pressure.
+        temp_list: Temperature list at which to reweight (default: 298)
+        pressure_list: The pressures at which reweighting is to be performed. 
+        T_ref: Reference temperature at which simulation is carried out (default: 298).
+        p_ref: Reference pressure (fugacity) at which simulation was done (default: 4.11e9 Pa)
+        interp_method: Method via which interpolation is performed. Choose between "interpolation"
+            or "regression" (default: regression). 
+        filename_root: The root of the file name for identification.
+        make_weight_figure: Whether or not to make a figure of weights at each required 
+            temperature or pressure. 
+        save_weight_figure: Save the weight figure if created. 
+        weight_figure_filepath: File path to which to save figure is figure is to be saved. 
+        save_isotherm_file: Whether to save isotherm file. 
+        isotherm_filepath: File path of the isotherm file. 
+        save_full_C_data_file: Whether the C data file with weights at all desired T and P is 
+            to be saved. 
+        C_data_filepath: Filepath of the C data if it is to be saved. 
         
         Returns
         --------------
+        df_iso: Isotherm dataframe.
+        df_C: Dataframe with weights at all desired T and P conditions. 
         """
         for T in temp_list:
             #Here, we will extract the loading values for the pressures. 
@@ -554,13 +676,37 @@ class NVTW_analysis():
                         isotherm_figure_filepath="tmp_iso_figure.png",
                         close_fig=False):
         """
-        Plot isotherms calcualated from before.
+        Plot isotherm figure.
         
+        Can be used in many ways using different combinations of parameters. This is 
+        to initialize, plot or finish up by adjusting the axes and saving the figure. 
+        All parameters are optional. 
+
+        Even axes can be directly worked upon if "fig" parameter is set to None and 
+        "ax" is parsed.   
+
         Parameters
-        --------------
+        ----------
+        df_iso: Isotherm dataframe.
+        fig: Figure object in which data can be plotted. 
+        ax: Axes objects which can be acted upon. 
+        figure_description: Description of the figures. 
+        axes_labels: Labels for the axes.
+        plot_data: Whether or not to plot the data.
+        x_value: The value to be plotted on the x axis.
+        y_value: The value to be plotted on the y axis.
+        plot_color: Color of the data plotted. 
+        plot_label: Label of the things plotted. 
+        final_adjustment: After all the data has been plotted, the axes are readjusted 
+            to include everuthing. 
+        xlim_values: X lim values (Optional, default: None).
+        save_isotherm_figure: Whether or not to save figure to file. 
+        isotherm_figure_filepath: File path to which figure is saved. 
+        close_fig: Whether or not to close figure object. Only do this when plotting is finished. 
         
         Returns
-        --------------
+        -------
+        fig or ax: Figure or axis object with actions as specified. 
         """
         #if fig is None:    
         if ax is None and fig is None:  #Neither axis nor object provided. make figure.
