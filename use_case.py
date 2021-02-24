@@ -73,7 +73,8 @@ try:
     fig_C = wh.plot_C_values(fig=None, figure_title=name,
                             plot_data=False, final_adjustment=False)
     fig_P = wh.plot_P_values(fig=None, figure_title=name,
-                            plot_data=False, final_adjustment=False)
+                            plot_data=False, final_adjustment=False, 
+                            save_image=False)
     fig_energy = wh.plot_energy_values(fig=None, figure_title=name,
                             plot_data=False, final_adjustment=False)
 
